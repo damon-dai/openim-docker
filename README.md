@@ -55,5 +55,33 @@ docker logs -f openim-chat
 ## Quick Experience ⚡
 
 For a quick experience with OpenIM services, please visit the [Quick Test Server Guide](https://docs.openim.io/guides/gettingStarted/quickTestServer).
+
+## Local Development 🛠️
+
+If you want to use your own modified version of openim-server:
+
+- **Quick Start**: [QUICK_START_LOCAL_DEV.md](./QUICK_START_LOCAL_DEV.md) - 3 steps to deploy your custom version
+- **Detailed Guide**: [LOCAL_BUILD_GUIDE.md](./LOCAL_BUILD_GUIDE.md) - Complete guide for local development
+- **Auto Script**: Use `./build-local.sh /path/to/openim-server` for automated build and deployment
+
+### Quick Example
+
+```bash
+# 1. Build your custom image
+cd /path/to/your/openim-server
+docker build -t openim/openim-server:my-version .
+
+# 2. Update configuration
+cd /path/to/openim-docker
+# Edit .env: OPENIM_SERVER_IMAGE=openim/openim-server:my-version
+
+# 3. Deploy
+docker compose up -d --force-recreate openim-server
+```
+
+## Troubleshooting 🔍
+
+If you encounter issues with unhealthy services or connection problems, please refer to:
+- [TROUBLESHOOTING.md](./TROUBLESHOOTING.md) - Common issues and solutions
 ```
 
