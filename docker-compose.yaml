@@ -6,6 +6,8 @@ services:
   mongo:
     image: "${MONGO_IMAGE}"
     container_name: mongo
+    ports:
+      - "27017:27017"
     command: >
       bash -c '
       docker-entrypoint.sh mongod --wiredTigerCacheSizeGB $$wiredTigerCacheSizeGB --auth &
@@ -262,14 +264,14 @@ services:
     networks:
       - openim
 
-  # openim-admin-front:
-  #   image: ${OPENIM_ADMIN_FRONT_IMAGE}
-  #   container_name: openim-admin-front
-  #   restart: always
-  #   ports:
-  #     - "${OPENIM_ADMIN_FRONT_PORT}:80"
-  #   networks:
-  #     - openim
+  openim-admin-front:
+    image: ${OPENIM_ADMIN_FRONT_IMAGE}
+    container_name: openim-admin-front
+    restart: always
+    ports:
+      - "${OPENIM_ADMIN_FRONT_PORT}:80"
+    networks:
+      - openim
 
   prometheus:
     image: ${PROMETHEUS_IMAGE}
@@ -278,15 +280,18 @@ services:
     user: root
     profiles:
       - m
+    ports:
+      - "${PROMETHEUS_PORT}:${PROMETHEUS_PORT}"
     volumes:
-      - ./config/prometheus.yml:/etc/prometheus/prometheus.yml
-      - ./config/instance-down-rules.yml:/etc/prometheus/instance-down-rules.yml
+      - ./config/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./config/instance-down-rules.yml:/etc/prometheus/instance-down-rules.yml:ro
       - ${DATA_DIR}/components/prometheus/data:/prometheus
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
       - "--storage.tsdb.path=/prometheus"
-      - "--web.listen-address=:${PROMETHEUS_PORT}"
-    network_mode: host
+      - "--web.listen-address=0.0.0.0:${PROMETHEUS_PORT}"
+    networks:
+      - openim
 
   alertmanager:
     image: ${ALERTMANAGER_IMAGE}
@@ -294,13 +299,16 @@ services:
     restart: always
     profiles:
       - m
+    ports:
+      - "${ALERTMANAGER_PORT}:${ALERTMANAGER_PORT}"
     volumes:
-      - ./config/alertmanager.yml:/etc/alertmanager/alertmanager.yml
-      - ./config/email.tmpl:/etc/alertmanager/email.tmpl
+      - ./config/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - ./config/email.tmpl:/etc/alertmanager/email.tmpl:ro
     command:
       - "--config.file=/etc/alertmanager/alertmanager.yml"
-      - "--web.listen-address=:${ALERTMANAGER_PORT}"
-    network_mode: host
+      - "--web.listen-address=0.0.0.0:${ALERTMANAGER_PORT}"
+    networks:
+      - openim
 
   grafana:
     image: ${GRAFANA_IMAGE}
@@ -309,6 +317,8 @@ services:
     restart: always
     profiles:
       - m
+    ports:
+      - "${GRAFANA_PORT}:${GRAFANA_PORT}"
     environment:
       - GF_SECURITY_ALLOW_EMBEDDING=true
       - GF_SESSION_COOKIE_SAMESITE=none
@@ -318,7 +328,8 @@ services:
       - GF_SERVER_HTTP_PORT=${GRAFANA_PORT}
     volumes:
       - ${DATA_DIR:-./}/components/grafana:/var/lib/grafana
-    network_mode: host
+    networks:
+      - openim
 
   node-exporter:
     image: ${NODE_EXPORTER_IMAGE}
@@ -326,6 +337,8 @@ services:
     restart: always
     profiles:
       - m
+    ports:
+      - "${NODE_EXPORTER_PORT}:${NODE_EXPORTER_PORT}"
     volumes:
       - /proc:/host/proc:ro
       - /sys:/host/sys:ro
@@ -334,8 +347,9 @@ services:
       - "--path.procfs=/host/proc"
       - "--path.sysfs=/host/sys"
       - "--path.rootfs=/rootfs"
-      - "--web.listen-address=:${NODE_EXPORTER_PORT}"
-    network_mode: host
+      - "--web.listen-address=0.0.0.0:${NODE_EXPORTER_PORT}"
+    networks:
+      - openim
 
   openim-server:
     image: ${OPENIM_SERVER_IMAGE}
